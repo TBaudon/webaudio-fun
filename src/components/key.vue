@@ -7,6 +7,8 @@
   }"
   @mousedown="press"
   @mouseup="release"
+  @touchstart="press"
+  @touchend="release"
   >
   </div>
 
@@ -54,11 +56,14 @@
 <style lang="sass">
 
   .key
-    width: 30px
+    width: 35px
     height: 100px
     border: solid 0.5px #bbb
     display: inline-block
     cursor: pointer
+    user-select: none
+    -webkit-tap-highlight-color: rgba(0,0,0,0)
+    -webkit-tap-highlight-color: transparent
 
   .black
     position: absolute

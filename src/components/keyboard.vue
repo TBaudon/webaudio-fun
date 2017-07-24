@@ -105,6 +105,7 @@
 <style lang="sass">
 
   .keyboard
+    user-select: none
     text-align: center
 
 </style>
