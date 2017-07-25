@@ -15,6 +15,8 @@
 </template>
 
 <script>
+  import Note from '@/objects/note'
+
   export default {
     name: 'key',
 
@@ -30,13 +32,8 @@
 
     methods: {
 
-      isBlack (index) {
-        let blackNotes = [1, 3, 6, 8, 10]
-        let n = index % 12
-        if (blackNotes.indexOf(n) !== -1) {
-          return true
-        }
-        return false
+      isBlack (note) {
+        return Note.isBlack(note)
       },
 
       press () {
@@ -56,24 +53,15 @@
 <style lang="sass">
 
   .key
-    width: 35px
-    height: 100px
     border: solid 0.5px #bbb
-    display: inline-block
+    flex: 1
     cursor: pointer
     user-select: none
     -webkit-tap-highlight-color: rgba(0,0,0,0)
     -webkit-tap-highlight-color: transparent
 
   .black
-    position: absolute
     background-color: black
-    width: 20px
-    height: 60px
-    vertical-align: top
-    margin-left: -10px
-    margin-right: -10px
-    z-index: 100
 
   .pressed
     background-color: #ddaa33

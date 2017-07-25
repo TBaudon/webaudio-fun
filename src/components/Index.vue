@@ -1,10 +1,9 @@
 <template>
 
-  <div>
-    <div class="canvasContainer">
-      <NodeCanvas />
+  <div class="indexContainer">
+    <div class="keyboardContainer">
+      <Keyboard :nbKey='24' :octave='3' :startKey='5' ref="keyboard"/>
     </div>
-    <Keyboard :nbKey='84' :octave='0' ref="keyboard"/>
   </div>
 
 </template>
@@ -49,8 +48,14 @@
   }
 </script>
 
-<style lang="sass">
-  .canvasContainer
+<style lang="sass" >
+  .indexContainer
     width: 100%
-    height: 500px
+    height: 100%
+
+  .keyboardContainer
+    height: 25%
+    width: 100%
+    position: absolute
+    bottom: 0px
 </style>

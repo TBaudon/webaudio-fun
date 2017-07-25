@@ -13,6 +13,14 @@ function generateNotes () {
 
 export default {
   notes: generateNotes(),
+  isBlack (note) {
+    let blackNotes = [1, 3, 6, 8, 10]
+    let n = note % 12
+    if (blackNotes.indexOf(n) !== -1) {
+      return true
+    }
+    return false
+  },
   getNote (note) {
     return Math.pow(root, note - 49) * aFreq
   },
