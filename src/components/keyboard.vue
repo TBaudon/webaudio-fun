@@ -188,13 +188,11 @@
 
   .controlContainer
     height: 100%
-    display: flex
     flex-flow: horizontal
 
   .keyContainer
     flex: 1
     height: 100%
-    display: flex
 
   .whiteKeys
     user-select: none
@@ -203,7 +201,8 @@
     display: flex
 
   .blackKeys
-    position: absolute
+    position: relative
+    top: -100%
     user-select: none
     height: 50%
     width: 100%
