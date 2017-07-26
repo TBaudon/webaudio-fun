@@ -23,8 +23,12 @@ class Oscillator {
     this.vca.disconnect(output)
   }
 
-  setGain (gain) {
-    this.vca.gain.value = gain
+  get gain () {
+    return this.vca.gain
+  }
+
+  get frequency () {
+    return this.vco.frequency
   }
 
   setNote (note) {

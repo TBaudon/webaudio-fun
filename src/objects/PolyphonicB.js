@@ -21,11 +21,11 @@ class PolyphonicB extends Instrument {
   }
 
   playNode (node, note) {
-    node.setGain(1)
+    node.gain.value = 1
   }
 
   stopNode (node, note) {
-    node.setGain(0)
+    node.gain.value = 0
   }
 }
 
