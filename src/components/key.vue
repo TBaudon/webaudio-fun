@@ -5,9 +5,14 @@
     black: isBlack(value),
     pressed: isPressed
   }"
+  ref="key"
   @mousedown="press"
   @mouseup="release"
+  @mousemove="move"
+  @mouseleave="release"
   @touchstart="press"
+  @touchmove="move"
+  @touchleave="release"
   @touchend="release"
   >
   </div>
@@ -36,6 +41,26 @@
         return Note.isBlack(note)
       },
 
+      move (e) {
+        if (e.touches) {
+          let x = e.touches[0].clientX
+          let y = e.touches[0].clientY
+
+          let div = this.$refs.key
+          let bound = div.getBoundingClientRect()
+          if (x >= bound.left && x <= bound.right &&
+            y >= bound.top && y <= bound.bottom) {
+            this.press()
+          } else {
+            this.release()
+          }
+        }
+
+        if (e.buttons === 1) {
+          this.press()
+        }
+      },
+
       press () {
         this.isPressed = true
         this.$emit('pressed', this.value)
@@ -46,6 +71,10 @@
         this.$emit('released', this.value)
       }
 
+    },
+
+    created () {
+      document.addEventListener('touchmove', this.move)
     }
   }
 </script>
@@ -59,6 +88,8 @@
     user-select: none
     -webkit-tap-highlight-color: rgba(0,0,0,0)
     -webkit-tap-highlight-color: transparent
+    background-color: white
+
 
   .black
     background-color: black

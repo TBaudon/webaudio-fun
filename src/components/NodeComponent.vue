@@ -1,19 +1,19 @@
 <template>
 
   <div class="node" :style="style">
-    <div class="dragHandle" @mousedown="startDrag" @touchstart="startDrag">
-    </div>
     <div class="nodeHeader">
 
       <div class="inputContainer">
         <div class="input connection"
           v-for="(input, index) in inputs"
           @mouseup="endConnection"
-          @touchend="endConnection">
+          ref="inputConnections"
+          :inputId="index"
+          >
         </div>
       </div>
 
-      <div class="nodeName">
+      <div class="nodeName dragHandle" @mousedown="startDrag" @touchstart="startDrag">
         {{name}}
       </div>
 
@@ -21,21 +21,27 @@
         <div class="output connection"
           v-for="(output, index) in outputs"
           @mousedown="startConnection"
-          @touchstart="startConnection">
+          @touchstart="startConnection"
+          >
         </div>
       </div>
 
     </div>
-    <div class="parameterContainer"
-      v-for="(parameter, index) in parameters"
-      :key='index'
-      :paramId='index'
-      @mouseup="endConnection"
-      @touchend="endConnection">
-      <div class="connection input parameter" :paramId='index'>
+
+    <div class="inputContainer">
+      <div class="parameterContainer"
+        v-for="(parameter, index) in parameters"
+        :key='index'
+        :paramId='index'
+        ref="inputConnections"
+        @mouseup="endConnection"
+        @touchstart="endConnection">
+        <div class="connection input parameter" :paramId='index'>
+        </div>
+        {{parameter.name}}
       </div>
-      {{parameter.name}}
     </div>
+
   </div>
 
 </template>
@@ -106,9 +112,11 @@
           e = e.touches[0]
         }
 
+        let connectionRect = e.target.getBoundingClientRect()
+
         let pos = {
-          x: e.clientX,
-          y: e.clientY
+          x: connectionRect.left + connectionRect.width / 2,
+          y: connectionRect.top + connectionRect.height / 2
         }
 
         this.$emit('startConnection', this, pos)
@@ -121,9 +129,11 @@
           e = e.touches[0]
         }
 
+        let connectionRect = e.target.getBoundingClientRect()
+
         let pos = {
-          x: e.clientX,
-          y: e.clientY
+          x: connectionRect.left + connectionRect.width / 2,
+          y: connectionRect.top + connectionRect.height / 2
         }
 
         this.$emit('endConnection', this, pos, param)
@@ -157,6 +167,27 @@
 
           for (let c of this.connections) {
             c.computeD()
+          }
+        }
+
+        if (this.$refs.inputConnections != null) {
+          let pos = {
+            x: e.clientX,
+            y: e.clientY
+          }
+
+          for (let inputConnection of this.$refs.inputConnections) {
+            let rect = inputConnection.getBoundingClientRect()
+            if (pos.x >= rect.left && pos.x <= rect.right &&
+              pos.y >= rect.top && pos.y <= rect.bottom) {
+              let paramId = inputConnection.getAttribute('paramId')
+              let param = this.parameters[paramId]
+              let anchorPos = {
+                x: rect.left + rect.width / 2 - (paramId ? 25 : 0),
+                y: rect.top + rect.height / 2
+              }
+              this.$emit('endConnection', this, anchorPos, param)
+            }
           }
         }
       },
@@ -217,7 +248,6 @@
     background-color: #bbb
     position: absolute
     border-radius: 10px
-    border: solid 3px #999
     font-family: arial
     color: #fff
     font-size: 0.9em
@@ -225,25 +255,27 @@
     user-select: none
 
   .nodeHeader
-    margin-top: 3px
     display: flex
     flex-flow: horizontal
     user-drag: none
     user-select: none
+    align-items: center
 
   .inputContainer
-    margin-left: -10px
-    margin-right: 10px
-    min-width: 12px
+    min-width: 20px
     user-drag: none
     user-select: none
+    margin-left: -20px
+    margin-top: 5px
+    margin-bottom: 5px
 
   .outputContainer
-    margin-right: -10px
-    margin-left: 10px
-    min-width: 12px
+    margin-right: -20px
+    min-width: 20px
     user-drag: none
     user-select: none
+    margin-top: 5px
+    margin-bottom: 5px
 
   .nodeName
     flex: 1
@@ -251,42 +283,41 @@
 
   .parameterContainer
     display: flex
-    margin-left: -10px
     font-size: 0.9em
     align-items: center
-    color: #ddd
-    padding-right: 10px
+    color: #963
 
   .connection
-    width: 12px
-    height: 12px
-    background-color: white
-    border: solid 2px #999
-    margin: 3px 0px 3px 0px
+    width: 20px
+    height: 30px
+    background-color: #fff
+    user-drag: none
+    user-select: none
+    margin-top: 3px
+    margin-bottom: 3px
     user-drag: none
     user-select: none
 
   .input
-    border-radius: 10px 0px 0px 10px
+    border-radius: 20px 0px 0px 20px
     user-drag: none
     user-select: none
 
   .output
-    border-radius: 0px 10px 10px 0px
+    border-radius: 0px 20px 20px 0px
     cursor: pointer
     user-drag: none
     user-select: none
 
   .parameter
-    margin-right: 5px
     background-color: #fc7
-    border: solid 2px #da6
+    margin-right: 5px
 
   .dragHandle
     height: 1em
-    background-color: #999
     cursor: move
     user-drag: none
     user-select: none
+    padding: 10px
 
 </style>

@@ -1,6 +1,14 @@
 <template>
 
   <div class="nodeCanvas">
+    <div class="nodeList" v-if="showList" :style="nodeListStyle">
+      <div v-for="(node, index) of nodeList"
+        class="nodeListItem"
+        :actionId="index"
+        @click="onClickNodeItem">
+        {{node.name}}
+      </div>
+    </div>
     <NodeComponent
       v-for="(node, index) of nodes"
       :key="index"
@@ -9,7 +17,9 @@
       @startConnection="onStartConnection"
       @endConnection="onEndConnection"
     />
-    <svg id="connectionsSvg">
+    <svg id="connectionsSvg"
+      @mousedown="onTouch"
+      ref="nodeCanvas">
       <path v-for="(connection, index) in connections" :d='connection.d' class="cable" :connectionId="index" @click="destroyConnection"></path>
     </svg>
   </div>
@@ -36,7 +46,42 @@
         nodes: [],
         childrenNodes: [],
         connections: [],
-        tempConnection: null
+        tempConnection: null,
+        lastTouchTime: 0,
+        showList: false,
+        nodeListStyle: {
+          top: 0,
+          left: 0
+        },
+        nodeList: [
+          {
+            name: 'gain',
+            create: () => {
+              this.addNode(this.context.createGain())
+            }
+          },
+          {
+            name: 'audioDestination',
+            create: () => {
+              this.addNode(this.context.destination)
+            }
+          },
+          {
+            name: 'oscillator',
+            create: () => {
+              let o = this.context.createOscillator()
+              o.start()
+              this.addNode(o)
+            }
+          },
+          {
+            name: 'biquad filter',
+            create: () => {
+              let filter = this.context.createBiquadFilter()
+              this.addNode(filter)
+            }
+          }
+        ]
       }
     },
 
@@ -55,6 +100,7 @@
       onEndConnection: function (node, pos, param) {
         if (this.tempConnection != null) {
           this.tempConnection.connect(node, pos, param)
+          this.tempConnection.computeD()
           this.tempConnection = null
         }
       },
@@ -88,23 +134,42 @@
         let connection = this.connections[index]
         connection.destroy()
         this.connections.splice(index, 1)
+      },
+
+      onTouch: function (e) {
+        if (e.touches) {
+          e = e.touches[0]
+        }
+        if (e.target === this.$refs.nodeCanvas) {
+          let time = new Date().getTime()
+          if (time - this.lastTouchTime < 300) {
+            let pos = {
+              x: e.clientX,
+              y: e.clientY
+            }
+            this.showNodes(pos)
+          } else {
+            this.lastTouchTime = time
+            this.showList = false
+          }
+        }
+      },
+
+      showNodes: function (pos) {
+        this.showList = true
+        this.nodeListStyle.top = pos.y + 'px'
+        this.nodeListStyle.left = pos.x + 'px'
+      },
+
+      onClickNodeItem: function (e) {
+        let actionId = e.target.getAttribute('actionId')
+        let action = this.nodeList[actionId]
+        action.create()
+        this.showList = false
       }
     },
 
     created () {
-      let a = this.context.createOscillator()
-      let b = this.context.createGain()
-      let c = this.context.createOscillator()
-
-      a.start()
-      a.frequency.value = 100
-      c.start()
-      c.frequency.value = 2
-      this.addNode(b)
-      this.addNode(a)
-      this.addNode(c)
-      this.addNode(this.context.destination)
-
       setTimeout(() => {
         this.childrenNodes = this.$refs.childrenNodes
       }, 1)
@@ -125,24 +190,37 @@
     height: 100%
     max-width: 100%
     max-height: 100%
-    background-color: #eee
-    border: solid 1px #ddd
+    background-color: #666
     display: block
-    overflow: auto
+    overflow: hidden
     position: relative
     user-drag: none
     user-select: none
+    font-family: arial
+
+  .nodeList
+    position: absolute
+    max-height: 300px
+    overflow: auto
+
+  .nodeListItem
+    padding: 5px
+    background-color: #bbb
 
   .cable
-    stroke-width: 4
+    stroke-width: 12
     fill: none
-    stroke: #999
+    stroke: white
     user-drag: none
     user-select: none
     cursor: pointer
+    user-drag: none
+    user-select: none
+    -webkit-tap-highlight-color: rgba(0,0,0,0)
+    -webkit-tap-highlight-color: transparent
 
   .cable:hover
-    stroke-width: 6
+    stroke-width: 12
     stroke: #f66
 
   #connectionsSvg
@@ -150,5 +228,6 @@
     height: 100%
     user-drag: none
     user-select: none
+    display: block
 
 </style>

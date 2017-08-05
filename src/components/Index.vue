@@ -3,10 +3,11 @@
   <div class="indexContainer">
 
     <NodeCanvas :context="audioContext"/>
-
+    <!--
     <div class="keyboardContainer">
       <Keyboard :nbKey='36' :octave='3' :startKey='5' ref="keyboard"/>
     </div>
+  -->
   </div>
 
 </template>
@@ -46,7 +47,7 @@
     },
 
     mounted () {
-      this.$refs.keyboard.connect(this.instru)
+      // this.$refs.keyboard.connect(this.instru)
     }
   }
 </script>
