@@ -15,6 +15,12 @@ class PolyphonicB extends Instrument {
       oscillator = new Oscillator(this.context, note)
       this.oscillatorMap[note] = oscillator
       this.addAudioNode(oscillator)
+
+      // let a = this.context.createOscillator()
+      // a.frequency.value = 5
+      // a.start()
+
+      // a.connect(oscillator.gain)
     }
 
     return oscillator
