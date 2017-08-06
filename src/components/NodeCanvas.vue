@@ -9,16 +9,22 @@
         {{node.name}}
       </div>
     </div>
-    <NodeComponent
-      v-for="(node, index) of nodes"
-      :key="index"
-      :value='node'
-      ref="childrenNodes"
-      @startConnection="onStartConnection"
-      @endConnection="onEndConnection"
-    />
+    <div class="nodeCanvasPanner" :style="nodeCanvasStyle">
+      <NodeComponent
+        v-for="(node, index) of nodes"
+        :key="index"
+        :value='node'
+        ref="childrenNodes"
+        @startConnection="onStartConnection"
+        @endConnection="onEndConnection"
+      />
+    </div>
     <svg id="connectionsSvg"
-      @mousedown="onTouch"
+      @mousedown="onMouseDown"
+      @touchstart="onTouchDown"
+      @mousemove="onTouchMove"
+      @touchmove="onTouchMove"
+      @mouseup="onMouseUp"
       ref="nodeCanvas">
       <path v-for="(connection, index) in connections" :d='connection.d' class="cable" :connectionId="index" @click="destroyConnection"></path>
     </svg>
@@ -45,11 +51,20 @@
       return {
         nodes: [],
         childrenNodes: [],
+        svgPosition: {
+          x: 0,
+          y: 0
+        },
         connections: [],
         tempConnection: null,
         lastTouchTime: 0,
         showList: false,
+        mouseDown: false,
         nodeListStyle: {
+          top: 0,
+          left: 0
+        },
+        nodeCanvasStyle: {
           top: 0,
           left: 0
         },
@@ -92,6 +107,8 @@
 
       onStartConnection: function (node, pos) {
         if (this.tempConnection == null) {
+          pos.x += this.svgPosition.x
+          pos.y += this.svgPosition.y
           this.tempConnection = new Connection(node, pos)
           this.connections.push(this.tempConnection)
         }
@@ -99,6 +116,8 @@
 
       onEndConnection: function (node, pos, param) {
         if (this.tempConnection != null) {
+          pos.x += this.svgPosition.x
+          pos.y += this.svgPosition.y
           this.tempConnection.connect(node, pos, param)
           this.tempConnection.computeD()
           this.tempConnection = null
@@ -115,6 +134,9 @@
             x: e.clientX,
             y: e.clientY
           }
+
+          pos.x += this.svgPosition.x
+          pos.y += this.svgPosition.y
 
           this.tempConnection.endX = pos.x
           this.tempConnection.endY = pos.y
@@ -136,10 +158,13 @@
         this.connections.splice(index, 1)
       },
 
-      onTouch: function (e) {
+      onMouseDown: function (e) {
+        this.mouseDown = true
+
         if (e.touches) {
           e = e.touches[0]
         }
+
         if (e.target === this.$refs.nodeCanvas) {
           let time = new Date().getTime()
           if (time - this.lastTouchTime < 300) {
@@ -153,9 +178,13 @@
             this.showList = false
           }
         }
+
+        this.startScrollX = e.clientX + this.svgPosition.x
+        this.startScrollY = e.clientY + this.svgPosition.y
       },
 
       showNodes: function (pos) {
+        this.mouseDown = false
         this.showList = true
         this.nodeListStyle.top = pos.y + 'px'
         this.nodeListStyle.left = pos.x + 'px'
@@ -166,6 +195,41 @@
         let action = this.nodeList[actionId]
         action.create()
         this.showList = false
+      },
+
+      onTouchMove: function (e) {
+        if (this.mouseDown || e.touches) {
+          let svg = this.$refs.nodeCanvas
+          let rect = svg.getBoundingClientRect()
+
+          let diffX = this.startScrollX - (e.clientX || e.touches[0].clientX)
+          let diffY = this.startScrollY - (e.clientY || e.touches[0].clientY)
+
+          this.svgPosition.x = diffX
+          this.svgPosition.y = diffY
+
+          let svgX = this.svgPosition.x
+          let svgY = this.svgPosition.y
+
+          let svgWidth = rect.width
+          let svgHeight = rect.height
+
+          let viewBox = '' + svgX + ' ' + svgY + ' ' + svgWidth + ' ' + svgHeight
+          svg.setAttribute('viewBox', viewBox)
+
+          this.nodeCanvasStyle.top = -svgY + 'px'
+          this.nodeCanvasStyle.left = -svgX + 'px'
+        }
+      },
+
+      onMouseUp: function (e) {
+        this.mouseDown = false
+      },
+
+      onTouchDown: function (e) {
+        this.mouseDown = true
+        this.startScrollX = e.touches[0].clientX + this.svgPosition.x
+        this.startScrollY = e.touches[0].clientY + this.svgPosition.y
       }
     },
 
@@ -188,8 +252,6 @@
   .nodeCanvas
     width: 100%
     height: 100%
-    max-width: 100%
-    max-height: 100%
     background-color: #666
     display: block
     overflow: hidden
@@ -197,11 +259,16 @@
     user-drag: none
     user-select: none
     font-family: arial
+    overflow: hidden
+
+  .nodeCanvasPanner
+    position: absolute
 
   .nodeList
     position: absolute
     max-height: 300px
     overflow: auto
+    z-index: 100
 
   .nodeListItem
     padding: 5px
